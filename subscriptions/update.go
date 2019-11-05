@@ -14,8 +14,8 @@ type UpdateSubscriptionReq struct {
 	Amount    types.Numeric      `payfast:"amount,body,numeric,optional"`      // The amount which the buyer must pay, in CENTS (ZAR).
 }
 
-func (c *Client) Update(subscriptionID string, payload UpdateSubscriptionReq) (*types.Subscription, error) {
-	body, err := c.patch(strings.ReplaceAll(updatePath, "__sid__", subscriptionID), payload)
+func (c *Client) Update(token string, payload UpdateSubscriptionReq) (*types.Subscription, error) {
+	body, err := c.patch(strings.ReplaceAll(updatePath, "__token__", token), payload)
 	if err != nil {
 		return nil, err
 	}

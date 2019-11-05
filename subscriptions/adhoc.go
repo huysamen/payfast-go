@@ -16,8 +16,8 @@ type AdHocSubscriptionChargeReq struct {
 	CreditCardCVV   types.Numeric      `payfast:"cc_cvv,body,numeric,optional"`                // The credit card cvv number.
 }
 
-func (c *Client) AdHocCharge(subscriptionID string, payload AdHocSubscriptionChargeReq) (bool, error) {
-	body, err := c.post(strings.ReplaceAll(adHocChargePath, "__sid__", subscriptionID), payload)
+func (c *Client) AdHocCharge(token string, payload AdHocSubscriptionChargeReq) (bool, error) {
+	body, err := c.post(strings.ReplaceAll(adHocChargePath, "__token__", token), payload)
 	if err != nil {
 		return false, err
 	}

@@ -11,8 +11,8 @@ type PauseSubscriptionReq struct {
 	Cycles types.Numeric `payfast:"cycles,body,numeric,optional"`
 }
 
-func (c *Client) Pause(subscriptionID string, payload PauseSubscriptionReq) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(pausePath, "__sid__", subscriptionID), payload)
+func (c *Client) Pause(token string, payload PauseSubscriptionReq) (bool, error) {
+	body, err := c.put(strings.ReplaceAll(pausePath, "__token__", token), payload)
 	if err != nil {
 		return false, err
 	}

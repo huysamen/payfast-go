@@ -3,12 +3,12 @@ package subscriptions
 import "github.com/huysamen/payfast-go/types"
 
 const (
-	fetchPath       = "/subscriptions/__sid__/fetch"
-	pausePath       = "/subscriptions/__sid__/pause"
-	unpausePath     = "/subscriptions/__sid__/unpause"
-	cancelPath      = "/subscriptions/__sid__/cancel"
-	updatePath      = "/subscriptions/__sid__/update"
-	adHocChargePath = "/subscriptions/__sid__/adhoc"
+	fetchPath       = "/subscriptions/__token__/fetch"
+	pausePath       = "/subscriptions/__token__/pause"
+	unpausePath     = "/subscriptions/__token__/unpause"
+	cancelPath      = "/subscriptions/__token__/cancel"
+	updatePath      = "/subscriptions/__token__/update"
+	adHocChargePath = "/subscriptions/__token__/adhoc"
 )
 
 type Client struct {

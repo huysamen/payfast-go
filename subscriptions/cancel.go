@@ -7,8 +7,8 @@ import (
 	"github.com/huysamen/payfast-go/types"
 )
 
-func (c *Client) Cancel(subscriptionID string) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(cancelPath, "__sid__", subscriptionID), nil)
+func (c *Client) Cancel(token string) (bool, error) {
+	body, err := c.put(strings.ReplaceAll(cancelPath, "__token__", token), nil)
 	if err != nil {
 		return false, err
 	}

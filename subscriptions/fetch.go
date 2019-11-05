@@ -7,8 +7,8 @@ import (
 	"github.com/huysamen/payfast-go/types"
 )
 
-func (c *Client) Fetch(subscriptionID string) (*types.Subscription, error) {
-	body, err := c.get(strings.ReplaceAll(fetchPath, "__sid__", subscriptionID))
+func (c *Client) Fetch(token string) (*types.Subscription, error) {
+	body, err := c.get(strings.ReplaceAll(fetchPath, "__token__", token))
 	if err != nil {
 		return nil, err
 	}

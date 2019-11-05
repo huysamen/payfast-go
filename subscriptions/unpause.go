@@ -7,8 +7,8 @@ import (
 	"github.com/huysamen/payfast-go/types"
 )
 
-func (c *Client) Unpause(subscriptionID string) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(unpausePath, "__sid__", subscriptionID), nil)
+func (c *Client) Unpause(token string) (bool, error) {
+	body, err := c.put(strings.ReplaceAll(unpausePath, "__token__", token), nil)
 	if err != nil {
 		return false, err
 	}
