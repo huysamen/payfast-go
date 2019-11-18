@@ -13,3 +13,5 @@
 
 .idea
 *.iml
+
+api/api_test.go
