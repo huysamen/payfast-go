@@ -20,6 +20,7 @@ import (
 
 	"github.com/huysamen/payfast-go/health"
 	"github.com/huysamen/payfast-go/subscriptions"
+	"github.com/huysamen/payfast-go/transactions"
 	"github.com/huysamen/payfast-go/types"
 	"github.com/huysamen/payfast-go/utils/timeutils"
 )
@@ -31,14 +32,13 @@ type Api struct {
 	merchantPassphrase string
 	testing            bool
 	http               *http.Client
-
-	Health        *health.Client
-	Subscriptions *subscriptions.Client
+	Health             *health.Client
+	Subscriptions      *subscriptions.Client
+	Transactions       *transactions.Client
 }
 
 func Default() (*Api, error) {
 	ID := os.Getenv("PAYFAST_MERCHANT_ID")
-
 	if ID == "" {
 		return nil, errors.New("no api merchant ID present")
 	}
@@ -49,7 +49,6 @@ func Default() (*Api, error) {
 	}
 
 	passphrase := os.Getenv("PAYFAST_MERCHANT_PASSPHRASE")
-
 	if passphrase == "" {
 		return nil, errors.New("no api merchant passphrase present")
 	}
@@ -85,10 +84,11 @@ func Default() (*Api, error) {
 func (a *Api) createServices() {
 	a.Health = health.Create(a.get)
 	a.Subscriptions = subscriptions.Create(a.get, a.put, a.patch, a.post)
+	a.Transactions = transactions.Create(a.get)
 }
 
-func (a *Api) get(path string) ([]byte, error) {
-	headers, _, err := a.generatePayload(nil)
+func (a *Api) get(path string, qp *url.Values) ([]byte, error) {
+	headers, _, err := a.generatePayload(nil, qp)
 	if err != nil {
 		return nil, err
 	}
@@ -96,12 +96,18 @@ func (a *Api) get(path string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", baseUrl+path, nil)
 	req.Header = headers
 
+	if qp != nil {
+		req.URL.RawQuery = qp.Encode()
+	}
+
 	rsp, err := a.http.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	defer func() { _ = rsp.Body.Close() }()
+
+	// todo: check auth here
 
 	return ioutil.ReadAll(rsp.Body)
 }
@@ -119,7 +125,7 @@ func (a *Api) patch(path string, payload interface{}) ([]byte, error) {
 }
 
 func (a *Api) putPostPatch(method string, path string, payload interface{}) ([]byte, error) {
-	headers, body, err := a.generatePayload(payload)
+	headers, body, err := a.generatePayload(payload, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +145,7 @@ func (a *Api) putPostPatch(method string, path string, payload interface{}) ([]b
 }
 
 // todo: very unoptimised, just trying to match Payfast's non-standard signature creation
-func (a *Api) generatePayload(data interface{}) (headers http.Header, payload []byte, err error) {
+func (a *Api) generatePayload(data interface{}, qp *url.Values) (headers http.Header, payload []byte, err error) {
 	fields := []string{"merchant-id", "version", "timestamp", "passphrase"}
 	values := make(map[string]string)
 	headers = make(http.Header)
@@ -154,6 +160,13 @@ func (a *Api) generatePayload(data interface{}) (headers http.Header, payload []
 	headers["version"] = []string{"v1"}
 	headers["timestamp"] = []string{timeutils.ToStandardString(time.Now())}
 	headers["passphrase"] = []string{a.merchantPassphrase}
+
+	if qp != nil {
+		for k, v := range *qp {
+			fields = append(fields, k)
+			values[k] = v[0]
+		}
+	}
 
 	if data != nil {
 		t := reflect.TypeOf(data)

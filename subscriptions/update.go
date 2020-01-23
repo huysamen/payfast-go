@@ -2,7 +2,6 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
@@ -15,7 +14,7 @@ type UpdateSubscriptionReq struct {
 }
 
 func (c *Client) Update(token string, payload UpdateSubscriptionReq) (*types.Subscription, error) {
-	body, err := c.patch(strings.ReplaceAll(updatePath, "__token__", token), payload)
+	body, err := c.patch(PathCat(basePath, token, updatePath), payload)
 	if err != nil {
 		return nil, err
 	}

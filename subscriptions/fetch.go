@@ -2,13 +2,12 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
 
 func (c *Client) Fetch(token string) (*types.Subscription, error) {
-	body, err := c.get(strings.ReplaceAll(fetchPath, "__token__", token))
+	body, err := c.get(PathCat(basePath, token, fetchPath), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -1,14 +1,19 @@
 package subscriptions
 
-import "github.com/huysamen/payfast-go/types"
+import (
+	"strings"
+
+	"github.com/huysamen/payfast-go/types"
+)
 
 const (
-	fetchPath       = "/subscriptions/__token__/fetch"
-	pausePath       = "/subscriptions/__token__/pause"
-	unpausePath     = "/subscriptions/__token__/unpause"
-	cancelPath      = "/subscriptions/__token__/cancel"
-	updatePath      = "/subscriptions/__token__/update"
-	adHocChargePath = "/subscriptions/__token__/adhoc"
+	basePath        = "/subscriptions/"
+	fetchPath       = "/fetch"
+	pausePath       = "/pause"
+	unpausePath     = "/unpause"
+	cancelPath      = "/cancel"
+	updatePath      = "/update"
+	adHocChargePath = "/adhoc"
 )
 
 type Client struct {
@@ -25,4 +30,14 @@ func Create(get types.GetRequest, put types.PutRequest, patch types.PatchRequest
 		patch: patch,
 		post:  post,
 	}
+}
+
+func PathCat(base string, token string, action string) string {
+	var b strings.Builder
+
+	b.WriteString(base)
+	b.WriteString(token)
+	b.WriteString(action)
+
+	return b.String()
 }

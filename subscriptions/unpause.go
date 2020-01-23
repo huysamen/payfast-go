@@ -2,13 +2,12 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
 
 func (c *Client) Unpause(token string) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(unpausePath, "__token__", token), nil)
+	body, err := c.put(PathCat(basePath, token, unpausePath), nil)
 	if err != nil {
 		return false, err
 	}

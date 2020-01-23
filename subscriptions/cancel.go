@@ -2,13 +2,12 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
 
 func (c *Client) Cancel(token string) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(cancelPath, "__token__", token), nil)
+	body, err := c.put(PathCat(basePath, token, cancelPath), nil)
 	if err != nil {
 		return false, err
 	}

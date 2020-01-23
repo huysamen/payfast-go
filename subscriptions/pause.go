@@ -2,7 +2,6 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
@@ -12,7 +11,7 @@ type PauseSubscriptionReq struct {
 }
 
 func (c *Client) Pause(token string, payload PauseSubscriptionReq) (bool, error) {
-	body, err := c.put(strings.ReplaceAll(pausePath, "__token__", token), payload)
+	body, err := c.put(PathCat(basePath, token, pausePath), payload)
 	if err != nil {
 		return false, err
 	}

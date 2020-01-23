@@ -2,7 +2,6 @@ package subscriptions
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/huysamen/payfast-go/types"
 )
@@ -17,7 +16,7 @@ type AdHocSubscriptionChargeReq struct {
 }
 
 func (c *Client) AdHocCharge(token string, payload AdHocSubscriptionChargeReq) (bool, error) {
-	body, err := c.post(strings.ReplaceAll(adHocChargePath, "__token__", token), payload)
+	body, err := c.post(PathCat(basePath, token, adHocChargePath), payload)
 	if err != nil {
 		return false, err
 	}
