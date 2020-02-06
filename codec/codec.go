@@ -31,12 +31,14 @@ func GenerateSignedRequest(
 		return nil, err
 	}
 
-	(*headers)["content-type"] = []string{"application/json"}
-
 	req, _ := http.NewRequest(method, path, bytes.NewBuffer(*body))
 	req.Header = *headers
 
-	if testing == true {
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	if testing {
 		if query == nil {
 			query = new(url.Values)
 		}
@@ -153,6 +155,7 @@ func parseValues(field string, fieldType string, requiredStr string, value inter
 	required := requiredStr == "required"
 
 	switch fieldType {
+
 	case "numeric":
 		n := value.(types.Numeric)
 
@@ -172,7 +175,7 @@ func parseValues(field string, fieldType string, requiredStr string, value inter
 		}
 
 		if n.Valid {
-			return n.Value, types.NewAlphaNumeric(n.Value.Format("2006-01-02")), nil
+			return n.Value, types.NewAlphaNumeric(timeutils.ToDayString(n.Value)), nil
 		}
 
 	case "alphanumeric":
