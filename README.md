@@ -11,7 +11,9 @@ go get -u github.com/huysamen/payfast-go
 ## Quickstart
 Create a new client default client to start accessing your PayFast account.
 ```go
-client, err := api.Default()
+import payfast "github.com/huysamen/payfast-go"
+
+pf, err := payfast.Default()
 ``` 
 
 This will create a client with the default settings.  It also expects the following environment variables to be set:
@@ -23,7 +25,7 @@ PAYFAST_MERCHANT_PASSPHRASE=[your payfast merchant passphrase]
 You can also create a more configurable client which accepts an `*http.Client` as well as the merchant ID and passphrase.
 
 ```go
-client, err := api.New(123, "passphrase", httpClient)
+pf, err := api.New(123, "passphrase", httpClient)
 ```
 
 ## Examples and How To
@@ -32,25 +34,25 @@ client, err := api.New(123, "passphrase", httpClient)
 
 #### API health check
 ```go
-ok, err := client.Health.Ping()
+ok, err := pf.Health.Ping()
 ```
 
 ### Subscriptions
 
 #### Fetch subscription
 ```go
-sub, err := client.Subscriptions.Fetch("subscription-token")
+sub, err := pf.Subscriptions.Fetch("subscription-token")
 ```
 
 #### Update subscription
 An example of how to use the nullable types:
 ```go
-sub, err := api.Subscriptions.Update(
+sub, err := pf.Subscriptions.Update(
 	"subscription-token",
 	subscriptions.UpdateSubscriptionReq{
 		Cycles:    types.Numeric{},     // default instance treated as nil and ignored
 		Frequency: types.NewNumeric(types.Annual),
-		//RunDate: types.Time{},      // excluded field treated as nil and ignored
+		//RunDate: types.Time{},        // excluded field treated as nil and ignored
 		Amount: types.NewNumeric(123),
 	},
 )
