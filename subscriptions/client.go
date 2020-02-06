@@ -17,13 +17,13 @@ const (
 )
 
 type Client struct {
-	get   types.GetRequest
-	put   types.PutRequest
-	patch types.PatchRequest
-	post  types.PostRequest
+	get   types.RemoteCall
+	put   types.RemoteCall
+	patch types.RemoteCall
+	post  types.RemoteCall
 }
 
-func Create(get types.GetRequest, put types.PutRequest, patch types.PatchRequest, post types.PostRequest) *Client {
+func Create(get types.RemoteCall, put types.RemoteCall, patch types.RemoteCall, post types.RemoteCall) *Client {
 	return &Client{
 		get:   get,
 		put:   put,

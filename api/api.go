@@ -1,28 +1,19 @@
 package api
 
 import (
-	"bytes"
-	"crypto/md5"
 	"crypto/tls"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
-	"reflect"
-	"sort"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/huysamen/payfast-go/codec"
 	"github.com/huysamen/payfast-go/health"
 	"github.com/huysamen/payfast-go/subscriptions"
 	"github.com/huysamen/payfast-go/transactions"
-	"github.com/huysamen/payfast-go/types"
-	"github.com/huysamen/payfast-go/utils/timeutils"
 )
 
 const baseUrl = "https://api.payfast.co.za"
@@ -37,7 +28,7 @@ type Api struct {
 	Transactions       *transactions.Client
 }
 
-func Default() (*Api, error) {
+func New(client *http.Client, testing bool) (*Api, error) {
 	ID := os.Getenv("PAYFAST_MERCHANT_ID")
 	if ID == "" {
 		return nil, errors.New("no api merchant ID present")
@@ -56,8 +47,18 @@ func Default() (*Api, error) {
 	api := &Api{
 		merchantID:         IDi,
 		merchantPassphrase: passphrase,
-		testing:            false,
-		http: &http.Client{
+		testing:            testing,
+		http:               client,
+	}
+
+	api.createServices()
+
+	return api, nil
+}
+
+func Default(testing bool) (*Api, error) {
+	return New(
+		&http.Client{
 			Timeout: time.Second * 60,
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -74,11 +75,8 @@ func Default() (*Api, error) {
 				},
 			},
 		},
-	}
-
-	api.createServices()
-
-	return api, nil
+		testing,
+	)
 }
 
 func (a *Api) createServices() {
@@ -87,17 +85,10 @@ func (a *Api) createServices() {
 	a.Transactions = transactions.Create(a.get)
 }
 
-func (a *Api) get(path string, qp *url.Values) ([]byte, error) {
-	headers, _, err := a.generatePayload(nil, qp)
+func (a *Api) get(path string, payload interface{}) ([]byte, error) {
+	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, "GET", baseUrl+path, payload, a.testing)
 	if err != nil {
 		return nil, err
-	}
-
-	req, _ := http.NewRequest("GET", baseUrl+path, nil)
-	req.Header = headers
-
-	if qp != nil {
-		req.URL.RawQuery = qp.Encode()
 	}
 
 	rsp, err := a.http.Do(req)
@@ -124,15 +115,11 @@ func (a *Api) patch(path string, payload interface{}) ([]byte, error) {
 	return a.putPostPatch("PATCH", path, payload)
 }
 
-func (a *Api) putPostPatch(method string, path string, payload interface{}) ([]byte, error) {
-	headers, body, err := a.generatePayload(payload, nil)
+func (a *Api) putPostPatch(method string, path string, data interface{}) ([]byte, error) {
+	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, method, baseUrl+path, data, a.testing)
 	if err != nil {
 		return nil, err
 	}
-
-	req, _ := http.NewRequest(method, baseUrl+path, bytes.NewBuffer(body))
-	req.Header = headers
-	req.Header.Set("content-type", "application/json")
 
 	rsp, err := a.http.Do(req)
 	if err != nil {
@@ -142,150 +129,4 @@ func (a *Api) putPostPatch(method string, path string, payload interface{}) ([]b
 	defer func() { _ = rsp.Body.Close() }()
 
 	return ioutil.ReadAll(rsp.Body)
-}
-
-// todo: very unoptimised, just trying to match Payfast's non-standard signature creation
-func (a *Api) generatePayload(data interface{}, qp *url.Values) (headers http.Header, payload []byte, err error) {
-	fields := []string{"merchant-id", "version", "timestamp", "passphrase"}
-	values := make(map[string]string)
-	headers = make(http.Header)
-	body := make(map[string]interface{})
-
-	values["merchant-id"] = strconv.FormatUint(a.merchantID, 10)
-	values["version"] = "v1"
-	values["timestamp"] = timeutils.ToStandardString(time.Now())
-	values["passphrase"] = a.merchantPassphrase
-
-	headers["merchant-id"] = []string{strconv.FormatUint(a.merchantID, 10)}
-	headers["version"] = []string{"v1"}
-	headers["timestamp"] = []string{timeutils.ToStandardString(time.Now())}
-	headers["passphrase"] = []string{a.merchantPassphrase}
-
-	if qp != nil {
-		for k, v := range *qp {
-			fields = append(fields, k)
-			values[k] = v[0]
-		}
-	}
-
-	if data != nil {
-		t := reflect.TypeOf(data)
-		v := reflect.ValueOf(data)
-
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			value := v.Field(i)
-			tag := field.Tag.Get("payfast")
-			attr := strings.Split(tag, ",")
-
-			if len(attr) != 4 {
-				return nil, nil, errors.New("incorrect payfast attributes format")
-			}
-
-			rv, sv, err := parseValues(attr[0], attr[2], attr[3], value.Interface())
-			if err != nil {
-				return nil, nil, err
-			}
-
-			switch attr[1] {
-			case "header":
-				if sv.Valid && sv.Value != "" {
-					headers[attr[0]] = []string{sv.Value}
-				}
-			case "body":
-				if rv != nil {
-					body[attr[0]] = rv
-				}
-			}
-
-			if sv.Valid && sv.Value != "" {
-				fields = append(fields, attr[0])
-				values[attr[0]] = sv.Value
-			}
-		}
-
-		payload, err = json.Marshal(body)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	sort.Strings(fields)
-
-	signature := ""
-
-	for _, f := range fields {
-		v := values[f]
-
-		if len(v) > 0 {
-			signature = signature + "&" + url.QueryEscape(f) + "=" + url.QueryEscape(v)
-		}
-	}
-
-	signature = signature[1:]
-
-	hash := md5.New()
-	_, _ = hash.Write([]byte(signature))
-	sig := hex.EncodeToString(hash.Sum(nil))
-
-	headers["signature"] = []string{sig}
-
-	return headers, payload, nil
-}
-
-func parseValues(field string, fieldType string, required string, value interface{}) (interface{}, types.AlphaNumeric, error) {
-	switch fieldType {
-	case "numeric":
-		n := value.(types.Numeric)
-
-		if !n.Valid && required == "required" {
-			return nil, types.AlphaNumeric{}, errors.New("field " + field + " is required")
-		}
-
-		if n.Valid {
-			return n.Value, types.NewAlphaNumeric(strconv.Itoa(n.Value)), nil
-		}
-
-	case "yyyy-mm-dd":
-		n := value.(types.AlphaNumeric)
-
-		if (!n.Valid || n.Value == "") && required == "required" {
-			return nil, types.AlphaNumeric{}, errors.New("field " + field + " is required")
-		}
-
-		if n.Valid && n.Value != "" {
-			_, err := time.Parse("2006-01-02", n.Value)
-			if err != nil {
-				return nil, types.AlphaNumeric{}, err
-			}
-
-			return n.Value, n, nil
-		}
-
-	case "alphanumeric":
-		n := value.(types.AlphaNumeric)
-
-		if (!n.Valid || n.Value == "") && required == "required" {
-			return nil, types.AlphaNumeric{}, errors.New("field " + field + " is required")
-		}
-
-		if n.Valid && n.Value != "" {
-			return n.Value, n, nil
-		}
-
-	case "bool":
-		n := value.(types.Bool)
-
-		if !n.Valid && required == "required" {
-			return nil, types.AlphaNumeric{}, errors.New("field " + field + " is required")
-		}
-
-		if n.Valid && n.Value {
-			return n.Value, types.NewAlphaNumeric("1"), nil
-		} else if n.Valid && !n.Value {
-			return n.Value, types.NewAlphaNumeric("0"), nil
-		}
-	}
-
-	return nil, types.AlphaNumeric{}, nil
 }

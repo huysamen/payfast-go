@@ -1,13 +1,15 @@
 package health
 
-import "github.com/huysamen/payfast-go/types"
+import (
+	"github.com/huysamen/payfast-go/types"
+)
 
 const pingPath = "/ping"
 
 type Client struct {
-	get types.GetRequest
+	get types.RemoteCall
 }
 
-func Create(get types.GetRequest) *Client {
+func Create(get types.RemoteCall) *Client {
 	return &Client{get: get}
 }

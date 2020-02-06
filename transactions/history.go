@@ -4,25 +4,17 @@ import (
 	"bytes"
 	"encoding/csv"
 	"io"
-	"net/url"
-	"time"
 
 	"github.com/huysamen/payfast-go/types"
-	"github.com/huysamen/payfast-go/utils/timeutils"
 )
 
-func (c *Client) History(from *time.Time, to *time.Time) ([]*types.Transaction, error) {
-	qp := url.Values{}
+type TransactionHistoryReq struct {
+	From types.Time `payfast:"from,query,yyyy-mm-dd,optional"`
+	To   types.Time `payfast:"to,query,yyyy-mm-dd,optional"`
+}
 
-	if from != nil {
-		qp.Add("from", timeutils.ToDayString(*from))
-	}
-
-	if to != nil {
-		qp.Add("to", timeutils.ToDayString(*to))
-	}
-
-	body, err := c.get(historyPath, &qp)
+func (c *Client) History(payload TransactionHistoryReq) ([]*types.Transaction, error) {
+	body, err := c.get(historyPath, payload)
 	if err != nil {
 		return nil, err
 	}
