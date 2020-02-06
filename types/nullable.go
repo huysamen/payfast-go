@@ -22,6 +22,13 @@ type Bool struct {
 	Value bool
 }
 
+func NewNumeric(value int) Numeric {
+	return Numeric{
+		Valid: true,
+		Value: value,
+	}
+}
+
 func NewAlphaNumeric(value string) AlphaNumeric {
 	return AlphaNumeric{
 		Valid: true,
@@ -33,5 +40,12 @@ func NewTime(value time.Time) Time {
 	return Time{
 		Valid: true,
 		Value: value,
+	}
+}
+
+func NewBool(value bool) Bool {
+	return Bool{
+		Value: true,
+		Valid: value,
 	}
 }

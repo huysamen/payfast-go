@@ -28,7 +28,20 @@ type Api struct {
 	Transactions       *transactions.Client
 }
 
-func New(client *http.Client, testing bool) (*Api, error) {
+func New(merchantID uint64, merchantPassphrase string, client *http.Client, testing bool) (*Api, error) {
+	api := &Api{
+		merchantID:         merchantID,
+		merchantPassphrase: merchantPassphrase,
+		testing:            testing,
+		http:               client,
+	}
+
+	api.createServices()
+
+	return api, nil
+}
+
+func Default(testing bool) (*Api, error) {
 	ID := os.Getenv("PAYFAST_MERCHANT_ID")
 	if ID == "" {
 		return nil, errors.New("no api merchant ID present")
@@ -44,20 +57,9 @@ func New(client *http.Client, testing bool) (*Api, error) {
 		return nil, errors.New("no api merchant passphrase present")
 	}
 
-	api := &Api{
-		merchantID:         IDi,
-		merchantPassphrase: passphrase,
-		testing:            testing,
-		http:               client,
-	}
-
-	api.createServices()
-
-	return api, nil
-}
-
-func Default(testing bool) (*Api, error) {
 	return New(
+		IDi,
+		passphrase,
 		&http.Client{
 			Timeout: time.Second * 60,
 			Transport: &http.Transport{
