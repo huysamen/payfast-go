@@ -3,6 +3,9 @@
 A client library written in Go (golang) for the [PayFast](https://www.payfast.co.za/) payment gateway which uses no
 external dependencies.
 
+## Scope
+This client has parity with the existing API functionality provided by PayFast.
+
 ## Installation
 ```shell script
 go get -u github.com/huysamen/payfast-go
