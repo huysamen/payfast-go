@@ -28,7 +28,7 @@ PAYFAST_MERCHANT_PASSPHRASE=[your payfast merchant passphrase]
 You can also create a more configurable client which accepts an `*http.Client` as well as the merchant ID and passphrase.
 
 ```go
-pf, err := api.New(123, "passphrase", httpClient)
+pf, err := payfast.New(123, "passphrase", httpClient)
 ```
 
 ## Examples and How To
