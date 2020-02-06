@@ -120,11 +120,13 @@ func sign(
 			}
 		}
 
-		var err error
+		if len(body) > 0 {
+			var err error
 
-		payload, err = json.Marshal(body)
-		if err != nil {
-			return nil, nil, nil, err
+			payload, err = json.Marshal(body)
+			if err != nil {
+				return nil, nil, nil, err
+			}
 		}
 	}
 

@@ -128,5 +128,7 @@ func (a *Api) putPostPatch(method string, path string, data interface{}) ([]byte
 
 	defer func() { _ = rsp.Body.Close() }()
 
+	// todo: check auth here
+
 	return ioutil.ReadAll(rsp.Body)
 }
