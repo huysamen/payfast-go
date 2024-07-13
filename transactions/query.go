@@ -21,7 +21,7 @@ func (c *Client) Query(token string) (*types.CreditCardStatus, error) {
 
 	if rsp.Code == 200 {
 		cs := &types.CreditCardStatus{}
-		cs.Copy(rsp.Data.Response.(map[string]interface{}))
+		cs.Copy(rsp.Data.Response.(map[string]any))
 
 		return cs, nil
 	}

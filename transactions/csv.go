@@ -11,6 +11,7 @@ import (
 func parseCsv(body []byte) ([]*types.Transaction, error) {
 	reader := csv.NewReader(bytes.NewReader(body))
 	txs := make([]*types.Transaction, 0)
+	withBatch := false
 
 	for {
 		tx, err := reader.Read()
@@ -21,12 +22,13 @@ func parseCsv(body []byte) ([]*types.Transaction, error) {
 		}
 
 		if tx[0] == "Date" {
+			withBatch = tx[8] == "Batch ID"
 			continue
 		}
 
 		t := new(types.Transaction)
 
-		err = t.Copy(tx)
+		err = t.Copy(tx, withBatch)
 		if err != nil {
 			return nil, err
 		}

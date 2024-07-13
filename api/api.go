@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/tls"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -87,7 +88,7 @@ func (a *Api) createServices() {
 	a.Transactions = transactions.Create(a.get)
 }
 
-func (a *Api) get(path string, payload interface{}) ([]byte, error) {
+func (a *Api) get(path string, payload any) ([]byte, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, "GET", baseUrl+path, payload, a.testing)
 	if err != nil {
 		return nil, err
@@ -105,19 +106,19 @@ func (a *Api) get(path string, payload interface{}) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
-func (a *Api) put(path string, payload interface{}) ([]byte, error) {
+func (a *Api) put(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("PUT", path, payload)
 }
 
-func (a *Api) post(path string, payload interface{}) ([]byte, error) {
+func (a *Api) post(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("POST", path, payload)
 }
 
-func (a *Api) patch(path string, payload interface{}) ([]byte, error) {
+func (a *Api) patch(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("PATCH", path, payload)
 }
 
-func (a *Api) putPostPatch(method string, path string, data interface{}) ([]byte, error) {
+func (a *Api) putPostPatch(method string, path string, data any) ([]byte, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, method, baseUrl+path, data, a.testing)
 	if err != nil {
 		return nil, err
@@ -132,5 +133,5 @@ func (a *Api) putPostPatch(method string, path string, data interface{}) ([]byte
 
 	// todo: check auth here
 
-	return ioutil.ReadAll(rsp.Body)
+	return io.ReadAll(rsp.Body)
 }

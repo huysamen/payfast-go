@@ -1,3 +1,3 @@
 package types
 
-type RemoteCall func(url string, payload interface{}) ([]byte, error)
+type RemoteCall func(url string, payload any) ([]byte, error)

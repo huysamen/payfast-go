@@ -1,10 +1,11 @@
 package types
 
 import (
-	"github.com/huysamen/payfast-go/utils/timeutils"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/huysamen/payfast-go/utils/timeutils"
 )
 
 type Transaction struct {
@@ -23,18 +24,21 @@ type Transaction struct {
 	MPaymentID    string
 	PFPaymentID   string
 	CustomString1 string
+	CustomInt1    int
 	CustomString2 string
+	CustomInt2    int
 	CustomString3 string
 	CustomString4 string
 	CustomString5 string
-	CustomInt1    int
-	CustomInt2    int
 	CustomInt3    int
 	CustomInt4    int
 	CustomInt5    int
+	BatchID       string
 }
 
-func (t *Transaction) Copy(tx []string) error {
+func (t *Transaction) Copy(tx []string, withBatch bool) error {
+	offset := 0
+
 	t.Date = timeutils.FromCsvString(tx[0])
 	t.Type = tx[1]
 	t.Sign = tx[2]
@@ -44,85 +48,107 @@ func (t *Transaction) Copy(tx []string) error {
 	t.Currency = tx[6]
 	t.FundingType = tx[7]
 
-	if tx[8] != "" {
-		f64, err := strconv.ParseFloat(strings.ReplaceAll(tx[8], ",", ""), 64)
+	if withBatch {
+		t.BatchID = tx[8]
+		offset = 1
+	}
+
+	if tx[8+offset] != "" {
+		f64, err := copyFloat64(tx, 8+offset)
 		if err != nil {
 			return err
 		}
+
 		t.Gross = f64
 	}
 
-	if tx[9] != "" {
-		f64, err := strconv.ParseFloat(strings.ReplaceAll(tx[9], ",", ""), 64)
+	if tx[9+offset] != "" {
+		f64, err := copyFloat64(tx, 9+offset)
 		if err != nil {
 			return err
 		}
+
 		t.Fee = f64
 	}
 
-	if tx[10] != "" {
-		f64, err := strconv.ParseFloat(strings.ReplaceAll(tx[10], ",", ""), 64)
+	if tx[10+offset] != "" {
+		f64, err := copyFloat64(tx, 10+offset)
 		if err != nil {
 			return err
 		}
+
 		t.Net = f64
 	}
 
-	if tx[11] != "" {
-		f64, err := strconv.ParseFloat(strings.ReplaceAll(tx[11], ",", ""), 64)
+	if tx[11+offset] != "" {
+		f64, err := copyFloat64(tx, 11+offset)
 		if err != nil {
 			return err
 		}
+
 		t.Balance = f64
 	}
 
-	t.MPaymentID = tx[12]
-	t.PFPaymentID = tx[13]
-	t.CustomString1 = tx[14]
-	t.CustomString2 = tx[15]
-	t.CustomString3 = tx[16]
-	t.CustomString4 = tx[17]
-	t.CustomString5 = tx[18]
+	t.MPaymentID = tx[12+offset]
+	t.PFPaymentID = tx[13+offset]
+	t.CustomString1 = tx[14+offset]
+	t.CustomString2 = tx[16+offset]
+	t.CustomString3 = tx[18+offset]
+	t.CustomString4 = tx[19+offset]
+	t.CustomString5 = tx[20+offset]
 
-	if tx[19] != "" {
-		i, err := strconv.Atoi(tx[19])
+	if tx[15+offset] != "" {
+		i, err := strconv.Atoi(tx[15+offset])
 		if err != nil {
 			return err
 		}
+
 		t.CustomInt1 = i
 	}
 
-	if tx[19] != "" {
-		i, err := strconv.Atoi(tx[20])
+	if tx[17+offset] != "" {
+		i, err := strconv.Atoi(tx[17+offset])
 		if err != nil {
 			return err
 		}
+
 		t.CustomInt2 = i
 	}
 
-	if tx[19] != "" {
-		i, err := strconv.Atoi(tx[21])
+	if tx[21+offset] != "" {
+		i, err := strconv.Atoi(tx[21+offset])
 		if err != nil {
 			return err
 		}
+
 		t.CustomInt3 = i
 	}
 
-	if tx[19] != "" {
-		i, err := strconv.Atoi(tx[22])
+	if tx[22+offset] != "" {
+		i, err := strconv.Atoi(tx[22+offset])
 		if err != nil {
 			return err
 		}
+
 		t.CustomInt4 = i
 	}
 
-	if tx[19] != "" {
-		i, err := strconv.Atoi(tx[23])
+	if tx[23+offset] != "" {
+		i, err := strconv.Atoi(tx[23+offset])
 		if err != nil {
 			return err
 		}
+
 		t.CustomInt5 = i
 	}
 
 	return nil
+}
+
+func copyFloat64(data []string, idx int) (float64, error) {
+	if data[idx] == "" {
+		return 0.0, nil
+	}
+
+	return strconv.ParseFloat(strings.ReplaceAll(data[idx], ",", ""), 64)
 }

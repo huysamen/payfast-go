@@ -23,7 +23,7 @@ func GenerateSignedRequest(
 	merchantPassphrase string,
 	method string,
 	path string,
-	data interface{},
+	data any,
 	testing bool,
 ) (*http.Request, error) {
 	query, headers, body, err := sign(merchantID, merchantPassphrase, data)
@@ -56,14 +56,14 @@ func GenerateSignedRequest(
 func sign(
 	merchantID uint64,
 	merchantPassphrase string,
-	data interface{},
+	data any,
 ) (*url.Values, *http.Header, *[]byte, error) {
 	fields := []string{"merchant-id", "version", "timestamp", "passphrase"}
 	values := make(map[string]string)
 
 	query := make(url.Values)
 	headers := make(http.Header)
-	body := make(map[string]interface{})
+	body := make(map[string]any)
 
 	values["merchant-id"] = strconv.FormatUint(merchantID, 10)
 	values["version"] = "v1"
@@ -153,7 +153,7 @@ func sign(
 	return &query, &headers, &payload, nil
 }
 
-func parseValues(field string, fieldType string, requiredStr string, value interface{}) (interface{}, types.AlphaNumeric, error) {
+func parseValues(field string, fieldType string, requiredStr string, value any) (any, types.AlphaNumeric, error) {
 	required := requiredStr == "required"
 
 	switch fieldType {

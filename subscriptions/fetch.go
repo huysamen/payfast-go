@@ -21,7 +21,7 @@ func (c *Client) Fetch(token string) (*types.Subscription, error) {
 
 	if rsp.Code == 200 {
 		sub := &types.Subscription{}
-		sub.Copy(rsp.Data.Response.(map[string]interface{}))
+		sub.Copy(rsp.Data.Response.(map[string]any))
 
 		return sub, nil
 	}

@@ -7,5 +7,5 @@ type Response struct {
 }
 
 type ResponseData struct {
-	Response interface{} `json:"response"`
+	Response any `json:"response"`
 }
