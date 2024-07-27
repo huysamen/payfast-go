@@ -1,4 +1,4 @@
-package api
+package payfast_go
 
 import (
 	"crypto/tls"
@@ -18,7 +18,7 @@ import (
 
 const baseUrl = "https://api.payfast.co.za"
 
-type Api struct {
+type Client struct {
 	merchantID         uint64
 	merchantPassphrase string
 	testing            bool
@@ -28,24 +28,24 @@ type Api struct {
 	Transactions       *transactions.Client
 }
 
-func New(merchantID uint64, merchantPassphrase string, client *http.Client, testing bool) (*Api, error) {
+func New(merchantID uint64, merchantPassphrase string, client *http.Client, testing bool) *Client {
 	if client == nil {
 		client = defaultClient()
 	}
 
-	api := &Api{
+	pf := &Client{
 		merchantID:         merchantID,
 		merchantPassphrase: merchantPassphrase,
 		testing:            testing,
 		http:               client,
 	}
 
-	api.createServices()
+	pf.createServices()
 
-	return api, nil
+	return pf
 }
 
-func Default(testing bool) (*Api, error) {
+func Default(testing bool) (*Client, error) {
 	ID := os.Getenv("PAYFAST_MERCHANT_ID")
 	if ID == "" {
 		return nil, errors.New("no api merchant ID present")
@@ -61,7 +61,7 @@ func Default(testing bool) (*Api, error) {
 		return nil, errors.New("no api merchant passphrase present")
 	}
 
-	return New(IDi, passphrase, defaultClient(), testing)
+	return New(IDi, passphrase, defaultClient(), testing), nil
 }
 
 func defaultClient() *http.Client {
@@ -84,13 +84,13 @@ func defaultClient() *http.Client {
 	}
 }
 
-func (a *Api) createServices() {
+func (a *Client) createServices() {
 	a.Health = health.Create(a.get)
 	a.Subscriptions = subscriptions.Create(a.get, a.put, a.patch, a.post)
 	a.Transactions = transactions.Create(a.get)
 }
 
-func (a *Api) get(path string, payload any) ([]byte, error) {
+func (a *Client) get(path string, payload any) ([]byte, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, "GET", baseUrl+path, payload, a.testing)
 	if err != nil {
 		return nil, err
@@ -108,19 +108,19 @@ func (a *Api) get(path string, payload any) ([]byte, error) {
 	return io.ReadAll(rsp.Body)
 }
 
-func (a *Api) put(path string, payload any) ([]byte, error) {
+func (a *Client) put(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("PUT", path, payload)
 }
 
-func (a *Api) post(path string, payload any) ([]byte, error) {
+func (a *Client) post(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("POST", path, payload)
 }
 
-func (a *Api) patch(path string, payload any) ([]byte, error) {
+func (a *Client) patch(path string, payload any) ([]byte, error) {
 	return a.putPostPatch("PATCH", path, payload)
 }
 
-func (a *Api) putPostPatch(method string, path string, data any) ([]byte, error) {
+func (a *Client) putPostPatch(method string, path string, data any) ([]byte, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, method, baseUrl+path, data, a.testing)
 	if err != nil {
 		return nil, err
