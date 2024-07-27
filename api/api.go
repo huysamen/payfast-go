@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -30,6 +29,10 @@ type Api struct {
 }
 
 func New(merchantID uint64, merchantPassphrase string, client *http.Client, testing bool) (*Api, error) {
+	if client == nil {
+		client = defaultClient()
+	}
+
 	api := &Api{
 		merchantID:         merchantID,
 		merchantPassphrase: merchantPassphrase,
@@ -58,28 +61,27 @@ func Default(testing bool) (*Api, error) {
 		return nil, errors.New("no api merchant passphrase present")
 	}
 
-	return New(
-		IDi,
-		passphrase,
-		&http.Client{
-			Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
-				}).DialContext,
-				MaxIdleConns:          100,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				TLSClientConfig: &tls.Config{
-					MinVersion: tls.VersionTLS12,
-				},
+	return New(IDi, passphrase, defaultClient(), testing)
+}
+
+func defaultClient() *http.Client {
+	return &http.Client{
+		Timeout: time.Second * 60,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
 			},
 		},
-		testing,
-	)
+	}
 }
 
 func (a *Api) createServices() {
@@ -103,7 +105,7 @@ func (a *Api) get(path string, payload any) ([]byte, error) {
 
 	// todo: check auth here
 
-	return ioutil.ReadAll(rsp.Body)
+	return io.ReadAll(rsp.Body)
 }
 
 func (a *Api) put(path string, payload any) ([]byte, error) {
