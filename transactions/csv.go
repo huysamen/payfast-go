@@ -13,6 +13,8 @@ func parseCsv(body []byte) ([]*types.Transaction, error) {
 	txs := make([]*types.Transaction, 0)
 	withBatch := false
 
+	reader.LazyQuotes = true
+
 	for {
 		tx, err := reader.Read()
 		if err == io.EOF {
