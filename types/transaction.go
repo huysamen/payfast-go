@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +40,14 @@ type Transaction struct {
 func (t *Transaction) Copy(tx []string, withBatch bool) error {
 	offset := 0
 
+	if withBatch {
+		offset = 1
+	}
+
+	if len(tx) != 24+offset {
+		return errors.New("incorrect csv data: " + strings.Join(tx, ","))
+	}
+
 	t.Date = timeutils.FromCsvString(tx[0])
 	t.Type = tx[1]
 	t.Sign = tx[2]
@@ -50,7 +59,6 @@ func (t *Transaction) Copy(tx []string, withBatch bool) error {
 
 	if withBatch {
 		t.BatchID = tx[8]
-		offset = 1
 	}
 
 	if tx[8+offset] != "" {
