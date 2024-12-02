@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/huysamen/payfast-go/utils/timeutils"
+	"github.com/huysamen/payfast-go/internal/utils/timeutils"
 )
 
 type Transaction struct {
