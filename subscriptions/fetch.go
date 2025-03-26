@@ -6,25 +6,25 @@ import (
 	"github.com/huysamen/payfast-go/types"
 )
 
-func (c *Client) Fetch(token string) (*types.Subscription, error) {
-	body, err := c.get(PathCat(basePath, token, fetchPath), nil)
+func (c *Client) Fetch(token string) (subscription *types.Subscription, status int, err error) {
+	body, status, err := c.get(PathCat(basePath, token, fetchPath), nil)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
 	rsp := new(types.Response)
 
 	err = json.Unmarshal(body, rsp)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
 	if rsp.Code == 200 {
-		sub := &types.Subscription{}
-		sub.Copy(rsp.Data.Response.(map[string]any))
+		subscription = &types.Subscription{}
+		subscription.Copy(rsp.Data.Response.(map[string]any))
 
-		return sub, nil
+		return subscription, status, nil
 	}
 
-	return nil, nil
+	return nil, status, nil
 }

@@ -90,50 +90,54 @@ func (a *Client) createServices() {
 	a.Transactions = transactions.Create(a.get)
 }
 
-func (a *Client) get(path string, payload any) ([]byte, error) {
+func (a *Client) get(path string, payload any) ([]byte, int, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, "GET", baseUrl+path, payload, a.testing)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	rsp, err := a.http.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	defer func() { _ = rsp.Body.Close() }()
 
 	// todo: check auth here
 
-	return io.ReadAll(rsp.Body)
+	body, err := io.ReadAll(rsp.Body)
+
+	return body, rsp.StatusCode, err
 }
 
-func (a *Client) put(path string, payload any) ([]byte, error) {
+func (a *Client) put(path string, payload any) ([]byte, int, error) {
 	return a.putPostPatch("PUT", path, payload)
 }
 
-func (a *Client) post(path string, payload any) ([]byte, error) {
+func (a *Client) post(path string, payload any) ([]byte, int, error) {
 	return a.putPostPatch("POST", path, payload)
 }
 
-func (a *Client) patch(path string, payload any) ([]byte, error) {
+func (a *Client) patch(path string, payload any) ([]byte, int, error) {
 	return a.putPostPatch("PATCH", path, payload)
 }
 
-func (a *Client) putPostPatch(method string, path string, data any) ([]byte, error) {
+func (a *Client) putPostPatch(method string, path string, data any) ([]byte, int, error) {
 	req, err := codec.GenerateSignedRequest(a.merchantID, a.merchantPassphrase, method, baseUrl+path, data, a.testing)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	rsp, err := a.http.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	defer func() { _ = rsp.Body.Close() }()
 
 	// todo: check auth here
 
-	return io.ReadAll(rsp.Body)
+	body, err := io.ReadAll(rsp.Body)
+
+	return body, rsp.StatusCode, err
 }

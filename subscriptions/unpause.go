@@ -6,22 +6,22 @@ import (
 	"github.com/huysamen/payfast-go/types"
 )
 
-func (c *Client) Unpause(token string) (bool, error) {
-	body, err := c.put(PathCat(basePath, token, unpausePath), nil)
+func (c *Client) Unpause(token string) (ok bool, status int, err error) {
+	body, status, err := c.put(PathCat(basePath, token, unpausePath), nil)
 	if err != nil {
-		return false, err
+		return false, status, err
 	}
 
 	rsp := new(types.Response)
 
 	err = json.Unmarshal(body, rsp)
 	if err != nil {
-		return false, err
+		return false, status, err
 	}
 
 	if rsp.Code == 200 {
-		return true, nil
+		return true, status, nil
 	}
 
-	return false, nil
+	return false, status, nil
 }

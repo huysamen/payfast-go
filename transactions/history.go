@@ -9,16 +9,16 @@ type TransactionHistoryReq struct {
 	To   types.Time `payfast:"to,query,yyyy-mm-dd,optional"`
 }
 
-func (c *Client) History(payload TransactionHistoryReq) ([]*types.Transaction, error) {
-	body, err := c.get(historyPath, payload)
+func (c *Client) History(payload TransactionHistoryReq) (txs []*types.Transaction, status int, err error) {
+	body, status, err := c.get(historyPath, payload)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
-	txs, err := parseCsv(body)
+	txs, err = parseCsv(body)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
-	return txs, nil
+	return txs, status, nil
 }

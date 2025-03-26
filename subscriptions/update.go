@@ -13,25 +13,25 @@ type UpdateSubscriptionReq struct {
 	Amount    types.Numeric `payfast:"amount,body,numeric,optional"`      // The amount which the buyer must pay, in CENTS (ZAR).
 }
 
-func (c *Client) Update(token string, payload UpdateSubscriptionReq) (*types.Subscription, error) {
-	body, err := c.patch(PathCat(basePath, token, updatePath), payload)
+func (c *Client) Update(token string, payload UpdateSubscriptionReq) (subscription *types.Subscription, status int, err error) {
+	body, status, err := c.patch(PathCat(basePath, token, updatePath), payload)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
 	rsp := new(types.Response)
 
 	err = json.Unmarshal(body, rsp)
 	if err != nil {
-		return nil, err
+		return nil, status, err
 	}
 
 	if rsp.Code == 200 {
-		sub := &types.Subscription{}
-		sub.Copy(rsp.Data.Response.(map[string]any))
+		subscription = &types.Subscription{}
+		subscription.Copy(rsp.Data.Response.(map[string]any))
 
-		return sub, nil
+		return subscription, status, nil
 	}
 
-	return nil, nil
+	return nil, status, nil
 }
